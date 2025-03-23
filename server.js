@@ -19,7 +19,7 @@ app.use(cors());
 app.use(express.json());
 app.use('/models', express.static('models')); // Serve model files statically
 
-// Root endpoint
+// Root endpoint - respond even if MongoDB is not connected
 app.get('/', (req, res) => {
   res.json({
     status: 'Server is running',
@@ -42,20 +42,28 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// MongoDB connection
-console.log('Attempting to connect to MongoDB...');
-console.log('MongoDB URI:', process.env.MONGODB_URI ? 'URI is set' : 'URI is not set');
+// Start server first, then connect to MongoDB
+const server = app.listen(PORT, HOST, () => {
+  console.log(`Server is running on http://${HOST}:${PORT}`);
+  console.log(`Health check endpoint: http://${HOST}:${PORT}/api/health`);
+  
+  // MongoDB connection
+  console.log('Attempting to connect to MongoDB...');
+  console.log('MongoDB URI:', process.env.MONGODB_URI ? 'URI is set' : 'URI is not set');
 
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/translator', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-})
-.then(() => console.log('Connected to MongoDB successfully'))
-.catch(err => {
-  console.error('MongoDB connection error details:', {
-    message: err.message,
-    code: err.code,
-    name: err.name
+  mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/translator', {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+  })
+  .then(() => console.log('Connected to MongoDB successfully'))
+  .catch(err => {
+    console.error('MongoDB connection error details:', {
+      message: err.message,
+      code: err.code,
+      name: err.name
+    });
+    // Don't exit the server on MongoDB connection failure
+    console.log('Server will continue running without MongoDB connection');
   });
 });
 
@@ -131,12 +139,6 @@ app.get('/model/check-version', async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
-});
-
-// Start server
-const server = app.listen(PORT, HOST, () => {
-  console.log(`Server is running on http://${HOST}:${PORT}`);
-  console.log(`Health check endpoint: http://${HOST}:${PORT}/api/health`);
 });
 
 // Graceful shutdown handler
