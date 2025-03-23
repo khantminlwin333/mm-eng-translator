@@ -2,7 +2,7 @@ app = "mm-eng-translator-kxgba"
 primary_region = "sin"  # Singapore region, you can change this
 
 [build]
-  builder = "heroku/buildpacks:20"
+  dockerfile = "Dockerfile"
 
 [env]
   PORT = "8080"

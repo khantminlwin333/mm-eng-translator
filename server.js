@@ -19,6 +19,29 @@ app.use(cors());
 app.use(express.json());
 app.use('/models', express.static('models')); // Serve model files statically
 
+// Root endpoint
+app.get('/', (req, res) => {
+  res.json({
+    status: 'Server is running',
+    endpoints: {
+      health: '/api/health',
+      trainingData: '/api/training-data',
+      modelVersion: '/model/check-version'
+    }
+  });
+});
+
+// Health check endpoint with more details
+app.get('/api/health', (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    port: PORT,
+    environment: process.env.NODE_ENV,
+    mongodbConnection: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+  });
+});
+
 // MongoDB connection
 console.log('Attempting to connect to MongoDB...');
 console.log('MongoDB URI:', process.env.MONGODB_URI ? 'URI is set' : 'URI is not set');
@@ -54,15 +77,6 @@ const TrainingDataSchema = new mongoose.Schema({
 
 const ModelVersion = mongoose.model('ModelVersion', ModelVersionSchema);
 const TrainingData = mongoose.model('TrainingData', TrainingDataSchema);
-
-// Health check endpoint
-app.head('/api/health', (req, res) => {
-  res.sendStatus(200);
-});
-
-app.get('/api/health', (req, res) => {
-  res.status(200).json({ status: 'ok' });
-});
 
 // Training data endpoints
 app.post('/api/training-data', async (req, res) => {
