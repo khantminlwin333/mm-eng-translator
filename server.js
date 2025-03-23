@@ -139,25 +139,36 @@ const server = app.listen(PORT, HOST, () => {
   console.log(`Health check endpoint: http://${HOST}:${PORT}/api/health`);
 });
 
-// Graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('SIGTERM received. Shutting down gracefully...');
+// Graceful shutdown handler
+const shutdown = (signal) => {
+  console.log(`${signal} received. Starting graceful shutdown...`);
+  
+  // Stop accepting new connections
   server.close(() => {
-    console.log('Server closed');
+    console.log('HTTP server closed');
+    
+    // Close database connection
     mongoose.connection.close(false, () => {
       console.log('MongoDB connection closed');
       process.exit(0);
     });
   });
-});
 
-process.on('SIGINT', () => {
-  console.log('SIGINT received. Shutting down gracefully...');
-  server.close(() => {
-    console.log('Server closed');
-    mongoose.connection.close(false, () => {
-      console.log('MongoDB connection closed');
-      process.exit(0);
-    });
-  });
+  // Force shutdown after 10 seconds
+  setTimeout(() => {
+    console.error('Could not close connections in time, forcefully shutting down');
+    process.exit(1);
+  }, 10000);
+};
+
+// Handle different signals
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+  shutdown('uncaughtException');
+});
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  shutdown('unhandledRejection');
 }); 
