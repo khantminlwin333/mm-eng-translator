@@ -6,6 +6,7 @@ primary_region = "sin"  # Singapore region, you can change this
 
 [env]
   PORT = "8080"
+  NODE_ENV = "production"
 
 [http_service]
   internal_port = 8080
@@ -17,11 +18,12 @@ primary_region = "sin"  # Singapore region, you can change this
 
   [[http_service.checks]]
     interval = "10s"
-    timeout = "2s"
+    timeout = "5s"
     grace_period = "30s"
     method = "GET"
     path = "/api/health"
     protocol = "http"
+    tls_skip_verify = true
 
 [[vm]]
   cpu_kind = "shared"

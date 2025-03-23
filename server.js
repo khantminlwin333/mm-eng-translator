@@ -6,8 +6,13 @@ const fs = require('fs');
 const path = require('path');
 
 const app = express();
-const PORT = process.env.PORT || 8080;
+const PORT = parseInt(process.env.PORT || '8080', 10);
 const HOST = '0.0.0.0';
+
+// Log environment variables
+console.log('Environment variables:');
+console.log('PORT:', process.env.PORT);
+console.log('NODE_ENV:', process.env.NODE_ENV);
 
 // Middleware
 app.use(cors());
@@ -116,8 +121,8 @@ app.get('/model/check-version', async (req, res) => {
 
 // Start server
 const server = app.listen(PORT, HOST, () => {
-  console.log(`Server running at http://${HOST}:${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV}`);
+  console.log(`Server is running on http://${HOST}:${PORT}`);
+  console.log(`Health check endpoint: http://${HOST}:${PORT}/api/health`);
 });
 
 // Graceful shutdown
