@@ -7,6 +7,7 @@ const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
+const HOST = '0.0.0.0';
 
 // Middleware
 app.use(cors());
@@ -114,7 +115,30 @@ app.get('/model/check-version', async (req, res) => {
 });
 
 // Start server
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running on port ${PORT}`);
+const server = app.listen(PORT, HOST, () => {
+  console.log(`Server running at http://${HOST}:${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV}`);
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received. Shutting down gracefully...');
+  server.close(() => {
+    console.log('Server closed');
+    mongoose.connection.close(false, () => {
+      console.log('MongoDB connection closed');
+      process.exit(0);
+    });
+  });
+});
+
+process.on('SIGINT', () => {
+  console.log('SIGINT received. Shutting down gracefully...');
+  server.close(() => {
+    console.log('Server closed');
+    mongoose.connection.close(false, () => {
+      console.log('MongoDB connection closed');
+      process.exit(0);
+    });
+  });
 }); 
