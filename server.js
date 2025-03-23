@@ -14,12 +14,21 @@ app.use(express.json());
 app.use('/models', express.static('models')); // Serve model files statically
 
 // MongoDB connection
+console.log('Attempting to connect to MongoDB...');
+console.log('MongoDB URI:', process.env.MONGODB_URI ? 'URI is set' : 'URI is not set');
+
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/translator', {
   useNewUrlParser: true,
   useUnifiedTopology: true
 })
-.then(() => console.log('Connected to MongoDB'))
-.catch(err => console.error('MongoDB connection error:', err));
+.then(() => console.log('Connected to MongoDB successfully'))
+.catch(err => {
+  console.error('MongoDB connection error details:', {
+    message: err.message,
+    code: err.code,
+    name: err.name
+  });
+});
 
 // Schemas
 const ModelVersionSchema = new mongoose.Schema({
@@ -107,4 +116,5 @@ app.get('/model/check-version', async (req, res) => {
 // Start server
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
+  console.log(`Environment: ${process.env.NODE_ENV}`);
 }); 
